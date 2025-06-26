@@ -1,22 +1,12 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import { useActionState, useOptimistic } from "react";
-import { parseProfileWithUrl } from "@/app/actions";
-import { ApiResponse } from "@/types";
-import { ErrorBoundary } from "react-error-boundary";
-import { Suspense } from "react";
-import { useFormStatus } from "react-dom";
-import { 
-  Button, 
-  Card, 
-  Input,
-  Alert,
-  Spin, 
-} from "antd";
-import { LoadingOutlined } from "@ant-design/icons";
-
-import { Typography, Layout } from "antd";
+import {Suspense, useActionState, useOptimistic, useRef} from "react";
+import {parseProfileWithUrl} from "@/app/actions";
+import {ApiResponse} from "@/types";
+import {ErrorBoundary} from "react-error-boundary";
+import {useFormStatus} from "react-dom";
+import {Alert, Button, Card, Input, Layout, Spin, Typography,} from "antd";
+import {LoadingOutlined} from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -40,7 +30,7 @@ const SubmitButton = ({ isLoading }: { isLoading: boolean }) => {
       aria-label="Parse profile"
       tabIndex={0}
     >
-      {pending ? "Parsing..." : "Parse Profile"}
+      {pending ? "Обработка..." : "Анализировать профиль"}
     </Button>
   );
 };
@@ -50,8 +40,8 @@ const ResultsDisplay = ({ result, loading }: { result: ApiResponse, loading: boo
   if (!result.message && !result.data && !result.error && !loading) return null;
 
   return (
-    <Card 
-      title="Results" 
+    <Card
+      title="Результаты"
       style={{ marginTop: 24, width: '100%', position: 'relative' }}
     >
       {loading && (
@@ -68,9 +58,9 @@ const ResultsDisplay = ({ result, loading }: { result: ApiResponse, loading: boo
           zIndex: 1,
           borderRadius: "8px",
         }}>
-          <Spin 
-            indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />} 
-            tip="Processing request..."
+          <Spin
+            indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />}
+            tip="Обработка запроса..."
           />
         </div>
       )}
@@ -85,15 +75,15 @@ const ResultsDisplay = ({ result, loading }: { result: ApiResponse, loading: boo
           {result.analysis && (
             <div style={{ marginTop: 16 }}>
               <Text strong style={{ display: 'block', marginBottom: 8 }}>
-                AI Analysis:
+                AI Анализ:
               </Text>
-              <div style={{ 
-                background: '#e6f7ff', 
-                border: '1px solid #91d5ff', 
-                borderRadius: 4, 
-                padding: 16, 
-                overflowY: 'auto', 
-                maxHeight: 384 
+              <div style={{
+                background: '#e6f7ff',
+                border: '1px solid #91d5ff',
+                borderRadius: 4,
+                padding: 16,
+                overflowY: 'auto',
+                maxHeight: 384
               }}>
                 <Text style={{ whiteSpace: 'pre-wrap' }}>{result.analysis}</Text>
               </div>
@@ -108,8 +98,8 @@ const ResultsDisplay = ({ result, loading }: { result: ApiResponse, loading: boo
 // Error fallback component
 const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error, resetErrorBoundary: () => void }) => {
   return (
-    <Card 
-      title="Something went wrong" 
+    <Card
+      title="Что-то пошло не так"
       style={{ marginBottom: 16, background: '#fff1f0', borderColor: '#ffa39e' }}
     >
       <Alert
@@ -117,73 +107,44 @@ const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error, resetError
         type="error"
         style={{ marginBottom: 16 }}
       />
-      <Button 
-        danger 
+      <Button
+        danger
         onClick={resetErrorBoundary}
         tabIndex={0}
       >
-        Try again
+        Попробовать снова
       </Button>
     </Card>
   );
 };
 
 export const ProfileParserForm = () => {
-  const [state, formAction] = useActionState(parseProfileWithUrl, initialState);
+  const [state, formAction, isPending] = useActionState(parseProfileWithUrl, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const [isLoading, setIsLoading] = useOptimistic(false);
-  const [loadingStartTime, setLoadingStartTime] = useOptimistic<number | null>(null);
   const [optimisticState, addOptimisticState] = useOptimistic(
-    state,
-    (currentState: ApiResponse) => ({
-      ...currentState,
-      message: "Processing your request...",
-    })
+      state,
+      (currentState: ApiResponse) => ({
+        ...currentState,
+        message: "Обработка вашего запроса...",
+      })
   );
 
-  // Ensure minimum loading time for better UX
-  const MIN_LOADING_TIME = 800; // milliseconds
-
-  useEffect(() => {
-    if (isLoading && loadingStartTime === null) {
-      // Set the loading start time when loading begins
-      setLoadingStartTime(Date.now());
-    } else if (!isLoading && loadingStartTime !== null) {
-      // Calculate how long the loader has been displayed
-      const elapsedTime = Date.now() - loadingStartTime;
-
-      // If less than minimum time, wait before hiding
-      if (elapsedTime < MIN_LOADING_TIME) {
-        const remainingTime = MIN_LOADING_TIME - elapsedTime;
-        const timeoutId = setTimeout(() => {
-          setLoadingStartTime(null);
-        }, remainingTime);
-
-        // Clean up timeout if component unmounts
-        return () => clearTimeout(timeoutId);
-      } else {
-        // Reset loading start time
-        setLoadingStartTime(null);
-      }
-    }
-  }, [isLoading, loadingStartTime]);
+  // Combine both loading states
+  const isActuallyLoading = isPending || isLoading;
 
   // Custom form action with optimistic updates
-  const handleFormAction = (formData: FormData) => {
+  const handleFormAction = async (formData: FormData): Promise<void> => {
     setIsLoading(true);
     addOptimisticState("optimistic-update");
 
-    // Use Promise to handle the completion of the form action
-    const actionPromise = formAction(formData);
-
-    // When the action completes, set loading to false
-    actionPromise.then(() => {
+    try {
+      await formAction(formData);
+    } catch (error) {
+      console.error('Form action failed:', error);
+    } finally {
       setIsLoading(false);
-    }).catch(() => {
-      setIsLoading(false);
-    });
-
-    return actionPromise;
+    }
   };
 
   // Reset form after submission
@@ -193,15 +154,12 @@ export const ProfileParserForm = () => {
     }
   };
 
-  // Determine if we're in a loading state
-  const isLoadingState = isLoading || loadingStartTime !== null;
-
   return (
       <Content style={{ padding: 32, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-        <Title level={2} style={{ marginBottom: 24 }}>Dota 2 Profile Parser</Title>
-        <div style={{ width: '100%',}}>
+        <Title level={2} style={{ marginBottom: 24 }}>Анализатор профилей Dota 2</Title>
+        <div style={{ width: '100%' }}>
           <ErrorBoundary FallbackComponent={ErrorFallback}>
-            <Card title="Parse Dota 2 Profile">
+            <Card title="Анализ профиля Dota 2">
               <form
                   ref={formRef}
                   action={handleFormAction}
@@ -209,17 +167,17 @@ export const ProfileParserForm = () => {
               >
                 <div>
                   <Text strong style={{ display: 'block', marginBottom: 8 }}>
-                    Profile URL
+                    URL профиля
                   </Text>
                   <Input
                       id="url"
                       name="url"
-                      placeholder="Enter Dota 2 profile URL"
-                      aria-label="Dota 2 profile URL"
+                      placeholder="Введите URL профиля Dota 2 (https://dota2.ru/forum/members/ten228.785716/)"
+                      aria-label="URL профиля Dota 2"
                       aria-required="true"
                       tabIndex={0}
                       required
-                      disabled={isLoadingState}
+                      disabled={isActuallyLoading}
                   />
                   {state.error && (
                       <Text type="danger" style={{ display: 'block', marginTop: 8 }} role="alert">
@@ -229,13 +187,13 @@ export const ProfileParserForm = () => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
-                  <SubmitButton isLoading={isLoadingState} />
+                  <SubmitButton isLoading={isActuallyLoading} />
                   <Button
                       onClick={resetForm}
                       tabIndex={0}
-                      disabled={isLoadingState}
+                      disabled={isActuallyLoading}
                   >
-                    Reset
+                    Сбросить
                   </Button>
                 </div>
               </form>
@@ -246,11 +204,10 @@ export const ProfileParserForm = () => {
                 <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
               </Card>
             }>
-              <ResultsDisplay result={optimisticState} loading={isLoadingState} />
+              <ResultsDisplay result={optimisticState} loading={isActuallyLoading} />
             </Suspense>
           </ErrorBoundary>
         </div>
       </Content>
-
   );
 };

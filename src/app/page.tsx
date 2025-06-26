@@ -1,8 +1,5 @@
-import { ProfileParserForm } from "@/components/ProfileParserForm";
-import { Typography, Layout } from "antd";
-
-const { Title } = Typography;
-const { Content } = Layout;
+import {ProfileParserForm} from "@/components/ProfileParserForm";
+import {Layout} from "antd";
 
 export default function Home() {
   return (

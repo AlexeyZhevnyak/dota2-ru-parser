@@ -1,8 +1,8 @@
 'use server';
 
-import { parseUserTopics } from '@/lib/dota2-parser';
-import { analyzeUserPosts } from '@/lib/gemini-ai';
-import { ApiResponse, } from '@/types';
+import {parseUserTopics} from '@/lib/dota2-parser';
+import {analyzeUserPosts} from '@/lib/gemini-ai';
+import {ApiResponse,} from '@/types';
 
 export async function parseProfile(formData: FormData): Promise<ApiResponse> {
   const url = formData.get('url') as string;

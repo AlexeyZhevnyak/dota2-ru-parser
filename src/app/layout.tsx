@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
-import { ConfigProvider } from "antd";
+import type {Metadata} from "next";
+import {ConfigProvider} from "antd";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Dota 2 Profile Parser",
-  description: "Parse Dota 2 profiles and analyze player statistics",
+  title: "Парсер профилей D2ru",
+  description: "Анализ профилей Dota 2 и статистики игроков",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <body>
         <ConfigProvider
           theme={{
