@@ -159,7 +159,7 @@ export const ProfileParserForm = () => {
         <Title level={2} style={{ marginBottom: 24 }}>Анализатор профилей Dota 2</Title>
         <div style={{ width: '100%' }}>
           <ErrorBoundary FallbackComponent={ErrorFallback}>
-            <Card title="Анализ профиля Dota 2">
+            <Card title="Анализ профиля Dota 2 ru">
               <form
                   ref={formRef}
                   action={handleFormAction}

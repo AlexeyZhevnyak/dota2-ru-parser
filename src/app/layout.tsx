@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Парсер профилей D2ru",
-  description: "Анализ профилей Dota 2 и статистики игроков",
+  description: "Анализ профилей Dota 2 ru",
 };
 
 export default function RootLayout({
