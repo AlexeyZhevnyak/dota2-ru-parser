@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
+    "@ant-design/nextjs-registry": "^1.0.2",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@google/genai": "^1.7.0",
     "antd": "^5.12.5",
     "jsdom": "^23.0.0",

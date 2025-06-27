@@ -8,12 +8,12 @@ import {UI_CONFIG} from '@/config';
 import {
     analysisContainerStyles,
     analysisContentStyles,
-    analysisTextStyles,
     formLabelStyles,
     loadingOverlayStyles,
     resultsCardStyles
 } from '@/styles/components';
 import {LoadingOutlined} from "@ant-design/icons";
+import {markdownToHtml} from '@/utils/markdownToHtml';
 
 const {Text} = Typography;
 
@@ -41,7 +41,6 @@ export const ResultsDisplay = ({result, loading}: ResultsDisplayProps) => {
                 <div style={loadingOverlayStyles}>
                     <Spin
                         indicator={<LoadingOutlined style={{ fontSize: 32 }} spin />}
-                        tip={UI_CONFIG.LOADING_TEXT.REQUEST_PROCESSING}
                     />
                 </div>
             )}
@@ -58,9 +57,12 @@ export const ResultsDisplay = ({result, loading}: ResultsDisplayProps) => {
                             <Text strong style={formLabelStyles}>
                                 {UI_CONFIG.FORM_LABELS.AI_ANALYSIS}
                             </Text>
-                            <div style={analysisContentStyles}>
-                                <Text style={analysisTextStyles}>{result.analysis}</Text>
-                            </div>
+                            <div 
+                                style={analysisContentStyles}
+                                dangerouslySetInnerHTML={{ 
+                                    __html: markdownToHtml(result.analysis || '') 
+                                }}
+                            />
                         </div>
                     )}
                 </>
