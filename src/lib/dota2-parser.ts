@@ -20,14 +20,41 @@ const HEADERS = {
 };
 
 class Dota2Parser {
-    private delay(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    async parseUserTopics(userProfileUrl: string): Promise<ParsedTopic> {
+        console.log(`Получена ссылка на профиль: ${userProfileUrl}`);
+
+        const userSegment = this.extractUserSegment(userProfileUrl);
+        console.log(`Найден сегмент пользователя: ${userSegment}`);
+
+        const topicUrls = await this.getAllTopicLinks(userSegment, PAGES_TO_SCRAPE);
+        const results: ParsedTopic = {};
+
+        if (topicUrls.length > 0) {
+            console.log('\nНачинаем сбор текстов первых сообщений...');
+
+            for (let i = 0; i < topicUrls.length; i++) {
+                const url = topicUrls[i];
+                console.log(`  Обрабатываем тему ${i + 1}/${topicUrls.length}: ${url}`);
+
+                const {title, content} = await this.parseTopicPage(url);
+
+                if (title && content) {
+                    results[title] = content;
+                }
+            }
+
+            console.log(`\nГотово! Результаты ${Object.keys(results).length} тем готовы к возврату`);
+        } else {
+            console.log('\nРабота завершена. Не удалось найти ни одной темы для парсинга.');
+        }
+
+        return results;
     }
 
     private async fetchWithRetry(url: string, retries = 3): Promise<Response> {
         for (let i = 0; i < retries; i++) {
             try {
-                const response = await fetch(url, { headers: HEADERS });
+                const response = await fetch(url, {headers: HEADERS});
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -154,43 +181,12 @@ class Dota2Parser {
             }
 
 
-            return { title, content };
+            return {title, content};
 
         } catch (error) {
             console.log(`   Ошибка при получении страницы темы ${topicUrl}: ${error}`);
-            return { title: null, content: null };
+            return {title: null, content: null};
         }
-    }
-
-    async parseUserTopics(userProfileUrl: string): Promise<ParsedTopic> {
-        console.log(`Получена ссылка на профиль: ${userProfileUrl}`);
-
-        const userSegment = this.extractUserSegment(userProfileUrl);
-        console.log(`Найден сегмент пользователя: ${userSegment}`);
-
-        const topicUrls = await this.getAllTopicLinks(userSegment, PAGES_TO_SCRAPE);
-        const results: ParsedTopic = {};
-
-        if (topicUrls.length > 0) {
-            console.log('\nНачинаем сбор текстов первых сообщений...');
-
-            for (let i = 0; i < topicUrls.length; i++) {
-                const url = topicUrls[i];
-                console.log(`  Обрабатываем тему ${i + 1}/${topicUrls.length}: ${url}`);
-
-                const { title, content } = await this.parseTopicPage(url);
-
-                if (title && content) {
-                    results[title] = content;
-                }
-            }
-
-            console.log(`\nГотово! Результаты ${Object.keys(results).length} тем готовы к возврату`);
-        } else {
-            console.log('\nРабота завершена. Не удалось найти ни одной темы для парсинга.');
-        }
-
-        return results;
     }
 }
 
