@@ -1,3 +1,7 @@
+/**
+ * @deprecated This file is deprecated. Use the new service at @/services/dota2-parser.service.ts instead.
+ */
+
 import {JSDOM} from 'jsdom';
 
 interface ParsedTopic {

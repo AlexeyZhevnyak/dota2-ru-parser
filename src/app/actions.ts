@@ -1,23 +1,36 @@
 'use server';
 
-import {parseUserTopics} from '@/lib/dota2-parser';
-import {analyzeUserPosts} from '@/lib/gemini-ai';
-import {ApiResponse,} from '@/types';
+import { parseUserTopics } from '@/services/dota2-parser.service';
+import { analyzeUserPosts } from '@/services/gemini-ai.service';
+import { ApiResponse, ParsedTopics } from '@/types';
+import {unstable_cache} from "next/cache";
 
-export async function parseProfile(formData: FormData): Promise<ApiResponse> {
+/**
+ * Validates the URL from form data
+ * @param formData - Form data containing the URL
+ * @returns The URL if valid, throws an error otherwise
+ */
+const validateUrl = (formData: FormData): string => {
   const url = formData.get('url') as string;
 
   if (!url || typeof url !== 'string') {
-    return {
-      error: 'URL is required and must be a string',
-      message: 'Validation error'
-    };
+    throw new Error('URL is required and must be a string');
   }
 
+  return url;
+};
+
+/**
+ * Parses a Dota 2 profile
+ * @param url - the URL
+ * @returns API response with parsing results
+ */
+async function parseProfile(url: string): Promise<ApiResponse> {
   try {
     console.log(`Начинаем парсинг профиля: ${url}`);
 
-    const results = await parseUserTopics(url);
+    // Parse the user topics
+    const results: ParsedTopics = await parseUserTopics(url);
 
     // Only analyze if we have results
     let analysis = undefined;
@@ -43,12 +56,26 @@ export async function parseProfile(formData: FormData): Promise<ApiResponse> {
     console.error('Ошибка при парсинге:', error);
 
     return {
-      error: 'Parsing failed',
-      message: error instanceof Error ? error.message : 'Unknown error occurred'
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      message: 'Parsing failed'
     };
   }
 }
 
+
+
+/**
+ * Server action for parsing a profile with URL
+ * @param prevState - Previous state
+ * @param formData - Form data containing the URL
+ * @returns API response with parsing results
+ */
 export async function parseProfileWithUrl(prevState: ApiResponse, formData: FormData): Promise<ApiResponse> {
-  return parseProfile(formData);
+  // Validate the URL
+  const url = validateUrl(formData);
+  const parseProfileCached = unstable_cache(parseProfile, [], {
+    tags: [url],
+    revalidate: 86400,
+  })
+  return parseProfileCached(url);
 }
