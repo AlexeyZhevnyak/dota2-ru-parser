@@ -7,13 +7,6 @@ import { JSDOM } from 'jsdom';
 import { API_CONFIG } from '@/config';
 import { ParsedTopics, TopicData } from '@/types';
 
-/**
- * Utility function to delay execution
- * @param ms - Milliseconds to delay
- */
-const delay = (ms: number): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
 
 /**
  * Fetches a URL with retry logic
